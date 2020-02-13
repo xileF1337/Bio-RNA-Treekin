@@ -150,8 +150,6 @@ package Bio::RNA::Treekin::PopulationDataRecord {
         my $self_as_string = sprintf "%22.20e ", $self->time;
         $self_as_string
             .= join q{ }, map {sprintf "%e", $_} @{ $self->_populations };
-        # use Data::Dumper;
-        # say STDERR Dumper();
 
         # There seems to be a trailing space in the treekin C code
         # (printf "%e ") but there is none in the treekin simulator output.
@@ -161,7 +159,7 @@ package Bio::RNA::Treekin::PopulationDataRecord {
     }
 
     __PACKAGE__->meta->make_immutable;
-}
+} # End of Bio::RNA::Treekin::PopulationDataRecord
 
 package Bio::RNA::Treekin::Record {
     use Moose;
@@ -171,6 +169,7 @@ package Bio::RNA::Treekin::Record {
     use autodie qw(:all);
     use Scalar::Util qw(reftype openhandle);
     use List::Util qw(first pairmap max uniqnum all);
+    use Carp qw(croak);
 
     use overload '""' => \&stringify;
 
@@ -180,15 +179,6 @@ package Bio::RNA::Treekin::Record {
         init_arg => 'population_data',
     );
 
-    # has '_init_population'  => (
-    #     is       => 'ro',
-    #     required => 1,
-    #     init_arg => 'init_population',
-    # );
-    has 'init_population'   => (is => 'ro', required => 1);
-    has 'rates_file'        => (is => 'ro', required => 1);
-    has 'file_index'        => (is => 'ro', required => 1);
-    has 'cmd'               => (is => 'ro', required => 1);
     has 'date'              => (is => 'ro', required => 1);
     has 'sequence'          => (is => 'ro', required => 1);
     has 'method'            => (is => 'ro', required => 1);
@@ -200,11 +190,20 @@ package Bio::RNA::Treekin::Record {
     has 'degeneracy'        => (is => 'ro', required => 1);
     has 'absorbing_state'   => (is => 'ro', required => 1);
     has 'states_limit'      => (is => 'ro', required => 1);
-    has 'info'              => (    # present only in last record per file
-                                    is        => 'ro',
-                                    required  => 0,
-                                    predicate => 'has_info',
-                               );
+
+    # Add optional attributes including predicate.
+    has $_ => (
+                   is        => 'ro',
+                   required  => 0,
+                   predicate => "has_$_",
+              )
+        foreach qw(
+                     info
+                     init_population
+                     rates_file
+                     file_index
+                     cmd
+                );
 
     # Get number of population data rows stored.
     sub population_data_count {
@@ -451,7 +450,7 @@ package Bio::RNA::Treekin::Record {
         chomp @header_lines;
 
         #say STDERR '<', @header_lines, '>' and
-        confess 'Unexpected end of record during parsing of the header'
+        confess 'Unexpected end of record while parsing header'
             unless defined $current_line;
 
         my @population_data_lines = ($current_line);
@@ -478,39 +477,65 @@ package Bio::RNA::Treekin::Record {
         my $orig  = shift;
         my $class = shift;
 
-        # Call original constructor if not passed an array ref.
-        unless (@_ == 1 and reftype $_[0] eq reftype \*STDIN) {
-            return $class->$orig(@_);
+        # Call original constructor if passed more than one arg.
+        return $class->$orig(@_) unless @_ == 1;
+
+        # Retrive file handle or pass on hash ref to constructor.
+        my $record_handle;
+        if (reftype $_[0]) {
+            if (reftype $_[0] eq reftype {}) {          # arg hash passed,
+                return $class->$orig(@_);               # pass on as is
+            }
+            elsif (reftype $_[0] eq reftype \*STDIN) {  # file handle passed
+                $record_handle = shift;
+            }
+            else {
+                croak 'Invalid ref type passed to constructor';
+            }
+        }
+        else {                                          # file name passed
+            my $record_file = shift;
+            open $record_handle, '<', $record_file;
         }
 
-        my $record_handle = shift;
+        # Read in file.
         my ($header_lines_ref, $population_data_lines_ref)
             = $class->_read_record_lines($record_handle);
 
+        # Parse file.
         my @header_args = $class->_parse_header_lines($header_lines_ref);
-
         my @data_args
             = $class->_parse_population_data_lines($population_data_lines_ref);
 
         my %args = (@header_args, @data_args);
-
         return $class->$orig(\%args);
     };
 
     sub BUILD {
         my $self = shift;
 
+        # Force construction despite lazyness.
+        $self->min_count;
+
         # Adjust min count of initial population as it was not known when
         # initial values were extracted from treekin cmd.
-        $self->init_population->set_min_count( $self->min_count );
+        $self->init_population->set_min_count( $self->min_count )
+            if $self->has_init_population;
     }
 
     sub stringify {
         my $self = shift;
 
+        # Format header line value of rates file entry.
+        my $make_rates_file_val = sub {
+            $self->rates_file . ' (#' . $self->file_index . ')';
+        };
+
         # Header
         my @header_entries = (
-            'Cmd'             => $self->cmd,
+            $self->has_rates_file ? ('Rates file' => $make_rates_file_val->()) : (),
+            $self->has_info       ? ('Info'       => $self->info)   : (),
+            $self->has_cmd        ? ('Cmd'        => $self->cmd)    : (),
             'Date'            => $self->date,
             'Sequence'        => $self->sequence,
             'Method'          => $self->method,
@@ -524,15 +549,6 @@ package Bio::RNA::Treekin::Record {
             'States limit'    => $self->states_limit,
         );
 
-        # Make info entry the second one if it exists.
-        unshift @header_entries, ('Info' => $self->info)
-            if $self->has_info;
-        my $rates_file_and_index = $self->rates_file
-                                   . ' (#'
-                                   . $self->file_index
-                                   . ')'
-                                   ;
-        unshift @header_entries, ('Rates file' => $rates_file_and_index);
         my $header_str = join "\n", pairmap { "# $a: $b" } @header_entries;
 
         # Population data
@@ -544,7 +560,7 @@ package Bio::RNA::Treekin::Record {
     }
 
     __PACKAGE__->meta->make_immutable;
-};
+};  # End of Bio::RNA::Treekin::Record
 
 
 package IO::File::RecordStream {
@@ -688,7 +704,7 @@ package IO::File::RecordStream {
     }
 
     __PACKAGE__->meta->make_immutable;
-};
+}; # End of IO::File::RecordStream
 
 
 package Bio::RNA::Treekin::MultiRecord {
@@ -715,7 +731,7 @@ package Bio::RNA::Treekin::MultiRecord {
     );
 
     __PACKAGE__->meta->make_immutable;
-}
+} # End of Bio::RNA::Treekin::MultiRecord
 
 
 =head1 NAME
