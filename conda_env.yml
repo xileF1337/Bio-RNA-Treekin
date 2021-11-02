@@ -1,0 +1,24 @@
+name: treekin
+channels:
+  - file:////scr/bintang/felix/conda/conda-bld
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - perl
+  - perl-autodie
+  - perl-file-slurp
+    # - perl-digest-crc
+  - perl-module-build
+  - perl-moose
+  # - perl-moosex-strictconstructor
+  - perl-namespace-autoclean
+  - perl-ipc-system-simple
+  - perl-io-stringy
+  - perl-scalar-list-utils
+  - perl-test-exception
+  - perl-test-fatal
+  - perl-test-needs
+  - perl-test-nowarnings
+prefix: /scr/bintang/felix/conda/envs/treekin
+
