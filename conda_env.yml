@@ -8,10 +8,10 @@ dependencies:
   - perl
   - perl-autodie
   - perl-file-slurp
-    # - perl-digest-crc
+  - perl-digest-crc
   - perl-module-build
   - perl-moose
-  # - perl-moosex-strictconstructor
+  - perl-moosex-strictconstructor
   - perl-namespace-autoclean
   - perl-ipc-system-simple
   - perl-io-stringy
