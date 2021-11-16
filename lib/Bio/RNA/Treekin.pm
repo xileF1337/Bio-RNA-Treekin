@@ -1,15 +1,20 @@
 package Bio::RNA::Treekin;
+our $VERSION = '0.01';
 
 use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
-
 
 # Stores a data from a single row of the treekin file, i.e. the populations of
 # all minima at a given time point.
 package Bio::RNA::Treekin::PopulationDataRecord {
+    our $VERSION = '0.01';
+
+    use 5.006;
+    use strict;
+    use warnings;
+
     use Moose;
     use MooseX::StrictConstructor;
     use namespace::autoclean;
@@ -570,7 +575,6 @@ package IO::File::RecordStream {
 
     use autodie qw(:all);
     use Scalar::Util qw(reftype openhandle);
-    #use List::Util qw(any);
 
     use IO::Lines;
 
@@ -591,7 +595,7 @@ package IO::File::RecordStream {
         is          => 'ro',
         default     => 0,
         init_arg    => undef,
-        writer      => '_end_reached',           # private writer
+        writer      => '_end_reached',          # private writer
     );
 
     # A regexp matching the separator line used to separate individual records
@@ -603,11 +607,11 @@ package IO::File::RecordStream {
 
     # A code ref that can be passed a ref to the array containing the read
     # lines and that makes a new record object from it.
-    has '_record_factory' => (              # keep the ref private
-        is          => 'ro',
-        isa         => 'CodeRef',
-        init_arg    => 'record_factory',
-        required    => 1,
+    has '_record_factory' => (                  # keep the ref private
+        is       => 'ro',
+        isa      => 'CodeRef',
+        init_arg => 'record_factory',
+        required => 1,
     );
 
     # Allow various calling styles of the constructor:
@@ -620,22 +624,18 @@ package IO::File::RecordStream {
         return $class->$orig(@_) unless @_ == 1;  # no special handling
 
         # Check if we got a file name or handle for multi-record input file.
-        my @constructor_args;
         if (not reftype $_[0]) {                    # file name given
             my $input_file_name = shift;
-            push @constructor_args, (file_name => $input_file_name);
+            return $class->$orig(file_name => $input_file_name);
         }
         elsif (reftype $_[0] eq reftype \*STDIN) {  # file handle given
             my $input_file_handle = shift;
-            push @constructor_args, (file_handle => $input_file_handle);
+            return $class->$orig(file_handle => $input_file_handle);
         }
         else {                                      # no file name / handle
             return $class->$orig(@_);
         }
-
-        return $class->$orig(@constructor_args);
     };
-
 
     sub BUILD {
         my $self = shift;
