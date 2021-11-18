@@ -93,8 +93,6 @@ sub transform {
     my ($self, $maps_to_min_ref, $new_min_count) = @_;
 
     my @new_pops = (0) x $new_min_count;    # new array with right size
-    # my @target_indices
-    #     = map { $maps_to_min_ref->{$_} - 1 } 1..$self->min_count;
     my @source_mins    = grep { defined $maps_to_min_ref->{$_} }
                               1..$self->min_count;      # filter unmapped
     my @source_indices = map  { $_ - 1 } @source_mins;
@@ -106,7 +104,6 @@ sub transform {
 
     # Copy population data to the correct positions and overwrite original.
     @new_pops[@target_indices] = @{$self->_populations}[@source_indices];
-    # @new_pops[@target_indices] = @{ $self->_populations };
     @{ $self->_populations }   = @new_pops;
 
     return;
