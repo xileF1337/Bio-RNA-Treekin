@@ -361,11 +361,11 @@ around BUILDARGS => sub {
 sub BUILD {
     my $self = shift;
 
-    # Force construction despite lazyness.
+    # Force construction despite laziness.
     $self->min_count;
 
     # Adjust min count of initial population as it was not known when
-    # initial values were extracted from treekin cmd.
+    # initial values were extracted from Treekin cmd.
     $self->init_population->set_min_count( $self->min_count )
         if $self->has_init_population;
 }
@@ -420,7 +420,7 @@ __END__
 
 =head1 NAME
 
-Bio::RNA::Treekin::Record - TODO I<Treekin> output.
+Bio::RNA::Treekin::Record - Parse, query, and manipulate I<Treekin> output.
 
 =head1 SYNOPSIS
 
@@ -428,12 +428,170 @@ Bio::RNA::Treekin::Record - TODO I<Treekin> output.
 
 =head1 DESCRIPTION
 
+Parses a regular output file of I<Treekin>. Allows to query population data
+as well as additional info from the header. New minima can be generated. The
+stringification returns, again, a valid I<Treekin> file which can be, e. g.,
+visualized using I<Grace>.
+
+=head1 ATTRIBUTES
+
+These attributes of the class allow to query various data from the header of
+the input file.
+
+=head2 date
+
+The time and date of the I<Treekin> run.
+
+=head2 sequence
+
+The RNA sequence for which the simulation was computed.
+
+=head2 method
+
+The method used to build the transition matrix as documented for the
+C<--method> switch of I<Treekin>.
+
+=head2 start_time
+
+Initial time of the simulation.
+
+=head2 stop_time
+
+Time at which the simulation stops.
+
+=head2 temperature
+
+Temperature of the simulation in degrees Celsius.
+
+=head2 basename
+
+Name of the input file. May be C<< <stdin> >> if data was read from standard
+input.
+
+=head2 time_increment
+
+Factor by which the time is multiplied in each simulation step (roughly, the
+truth is more complicated).
+
+=head2 degeneracy
+
+Whether to consider degeneracy in transition rates.
+
+=head2 absorbing_state
+
+The states specified as absorbing do not have any outgoing transitions and
+thus serve as "population sinks" during the simulation.
+
+=head2 states_limit
+
+Maximum number of states (???). Value is always (?) 2^31 = 2147483647.
+
+=head2 info
+
+A free text field containing additional comments.
+
+Only available in I<some> of the records of a I<BarMap> multi-record file. Use
+predicate C<has_info> to check whether this attribute is available.
+
+=head2 init_population
+
+The initial population specified by the user. This information is extracted
+from the C<cmd> attribute.
+
+Only available in I<BarMap>'s multi-record files. Use predicate
+C<has_init_population> to check whether this attribute is available.
+
+=head2 rates_file
+
+The file that the rate matrix was read from.
+
+Only available in I<BarMap>'s multi-record files. Use predicate
+C<has_rates_file> to check whether this attribute is available.
+
+=head2 file_index
+
+Zero-based index given to the input files in the order they were read.
+Extracted from the C<rates_file> attribute.
+
+Use predicate C<has_file_index> to check whether this attribute is available.
+
+=head2 cmd
+
+The command used to invoke I<Treekin>. Only available in I<BarMap>'s
+multi-record files.
+
+Use predicate C<has_cmd> to check whether this attribute is available.
+
+
 =head1 METHODS
 
-=head2 new()
+These methods allow the construction, querying and manipulation of the record
+objects and its population data.
 
-=head2 ...()
+=head2 Bio::RNA::Treekin::Record->new($treekin_file)
 
+=head2 Bio::RNA::Treekin::Record->new($treekin_handle)
+
+Construct a new record from a (single) I<Treekin> file.
+
+=head2 population_data_count
+
+Return the number of population data records, i. e. the number of simulated
+time steps, including the start time.
+
+=head2 min_count
+
+Return the number of minima.
+
+=head2 keep_mins(@kept_minima)
+
+Remove all minima but the ones from C<@kept_minima>. The list is sorted and
+de-duplicated first.
+
+=head2 splice_mins(@kept_minima)
+
+Like C<keep_mins()>, but do not sort / de-duplicate, but use C<@kept_minima>
+as is. This can be used to remove, duplicate or reorder minima.
+
+=head2 max_pop_of_min($minimum)
+
+Get the maximum population value of all time points for a specific C<$minimum>.
+
+=head2 pops_of_min($minimum)
+
+Get a list of the populations at all time points (in chronological order) for
+a single C<$minimum>.
+
+=head2 final_population
+
+Get the last population data record, an object of class
+L<Bio::RNA::Treekin::PopulationDataRecord>. It contains the population data
+for all minima at the C<stop_time>.
+
+=head2 population($i)
+
+Get the C<$i>-th population data record, an object of class
+L<Bio::RNA::Treekin::PopulationDataRecord>. C<$i> is a zero-based index in
+chronological order.
+
+=head2 populations
+
+Returns the list of all population data records. Useful for iterating.
+
+=head2 add_min
+
+Add a single new minimum with all-zero entries. Data can then be appended to
+this new min using C<append_pop_data()>.
+
+Returns the index of the new minimum.
+
+=head2 append_pop_data
+
+TODO
+
+=head2 stringify
+
+Returns the record as a I<Treekin> file.
 
 =head1 AUTHOR
 
