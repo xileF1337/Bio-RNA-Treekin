@@ -18,3 +18,5 @@ Bio-RNA-Treekin-*
 Bio-RNA-Treekin-*.tar.gz
 _Inline             # code compiled by Inline::C module
 .*.swp
+*.swp
+*.bak               # backup files
