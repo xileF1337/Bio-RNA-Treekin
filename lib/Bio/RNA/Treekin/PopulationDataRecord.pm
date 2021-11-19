@@ -24,6 +24,7 @@ has '_populations' => (
     init_arg => 'populations',
 );
 
+# Return a deep copy of this object.
 sub clone {
     my $self = shift;
     my $clone = __PACKAGE__->new(
@@ -33,6 +34,7 @@ sub clone {
     return $clone;
 }
 
+# Return number of minima for which there is population data.
 sub min_count {
     my $self = shift;
     my $min_count = @{ $self->_populations };   # number of data points
@@ -136,6 +138,7 @@ around BUILDARGS => sub {
     return $class->$orig(@args);
 };
 
+# Convert this data record back to a line as found in the Treekin file.
 sub stringify {
     my $self = shift;
 
@@ -165,20 +168,102 @@ __END__
 
 =head1 NAME
 
-Bio::RNA::Treekin::PopulationDataRecord - TODO I<Treekin> output.
+Bio::RNA::Treekin::PopulationDataRecord - Parse, query, and manipulate a
+single data line from a I<Treekin> file.
 
 =head1 SYNOPSIS
 
     use Bio::RNA::Treekin;
 
+    my $pop_data = Bio::RNA::Treekin::PopulationDataRecord->new(
+                    '<single population data line from Treekin file>');
+
+    print "Populations at time", $pop_data->time, ":\n";
+    print "    min $_: ", $pop_data->of_min($_), "\n"
+        for 1..$pop_data->min_count;
+
+    my @big_pops = grep {$pop_data->of_min($_) > 0.1} 1..$pop_data->min_count;
+    print 'Minima ', join(q{, }, @big_pops), ' have a population greater 0.1\n';
+
+
+
 =head1 DESCRIPTION
+
+This class provides a population data record that stores the information from
+a single data line of a I<Treekin> file.
+
 
 =head1 METHODS
 
-=head2 new()
 
-=head2 ...()
+=head2 Bio::RNA::Treekin::PopulationDataRecord->new($treekin_file_line)
 
+Construct a new population data record from a single data line of a I<Treekin>
+file.
+
+=head2 Bio::RNA::Treekin::PopulationDataRecord->new(arg => $argval, ...)
+
+Construct a new population data record.
+
+=over
+
+=item Required arguments:
+
+=over
+
+=item time
+
+The point in time that the population data describes.
+
+=item populations
+
+Array ref of the population values for all minima.
+
+=back
+
+=back
+
+
+=head2 $pop_data->min_count
+
+Return the number of minima in this data record. This count is not stored
+explicitely, but inferred from the number of populations supplied during
+construction.
+
+=head2 $pop_data->time
+
+Return the point in time (in arbitrary time units) that the population data
+describes.
+
+=head2 $pop_data->clone
+
+Return a deep copy of this data record.
+
+=head2 $pop_data->set_min_count($new_min_count)
+
+Increase the number of minima to C<$new_min_count>. The newly added minima
+will have population values of 0.
+
+Currently, the number of minima cannot be decreased to avoid data loss.
+
+=head2 $pop_data->populations
+
+Return a list of all population values for minima 1, 2, ..., n in this ordner.
+
+=head2 $pop_data->of_min($minimum)
+
+Return the population value of the given C<$minimum> at the C<time> of this
+record.
+
+=head2 $pop_data->transform
+
+
+=head2 $pop_data->stringify
+
+=head2 "$pop_data"
+
+Convert this data record into a string representation, corresponding to a
+single line as found in a I<Treekin> file.
 
 =head1 AUTHOR
 
@@ -226,7 +311,7 @@ L<https://metacpan.org/release/Bio-RNA-Treekin>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2019 Felix Kuehnl.
+Copyright 2019-2021 Felix Kuehnl.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

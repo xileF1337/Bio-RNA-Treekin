@@ -639,7 +639,7 @@ L<https://metacpan.org/release/Bio-RNA-Treekin>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2019 Felix Kuehnl.
+Copyright 2019-2021 Felix Kuehnl.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
