@@ -1,0 +1,27 @@
+#!include_default
+# Avoid configuration metadata file
+^MYMETA\.
+
+# Avoid Module::Build generated and utility files.
+\bBuild$
+\bBuild.bat$
+\b_build
+\bBuild.COM$
+\bBUILD.COM$
+\bbuild.com$
+^MANIFEST\.SKIP
+
+# Avoid archives of this distribution
+\bBio-RNA-Treekin-[\d\.\_]+
+
+# Backup files
+[.]bak$
+[.]swp$
+
+# Version control
+[.]git
+
+# Misc
+^conda_env.yml$
+
+
