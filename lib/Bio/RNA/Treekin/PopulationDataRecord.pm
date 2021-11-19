@@ -12,7 +12,7 @@ use namespace::autoclean;
 
 use autodie qw(:all);
 use Scalar::Util qw(reftype);
-use   List::Util qw(    all);
+use   List::Util qw(max all);
 
 use overload '""' => \&stringify;
 
@@ -89,10 +89,13 @@ sub of_min {
 #   maps_to_min_ref: Hash ref that specifies for each kept minimum (key) to
 #       which new minimum (value) it is supposed to be mapped.
 #   new_min_count: New size (number of mins) of the record after the
-#       transformation.
+#       transformation. Defaults to the maximum value of maps_to_min_ref.
 # Void.
 sub transform {
     my ($self, $maps_to_min_ref, $new_min_count) = @_;
+
+    # If not explicitely given, use max value a min was mapped to as min count.
+    $new_min_count //= max values %$maps_to_min_ref;
 
     my @new_pops = (0) x $new_min_count;    # new array with right size
     my @source_mins    = grep { defined $maps_to_min_ref->{$_} }
@@ -255,8 +258,35 @@ Return a list of all population values for minima 1, 2, ..., n in this ordner.
 Return the population value of the given C<$minimum> at the C<time> of this
 record.
 
-=head2 $pop_data->transform
+=head2 $pop_data->transform($maps_to_min_ref, $new_min_count)
 
+Transform (reorder and resize) the population data according to a given
+mapping (C<$maps_to_min_ref>) and resize to a given number of minima
+(C<$new_min_count>). All minima that are not mapped to a new position are
+discarded (replaced by zero).
+
+NOTE: Ensure that no two minima are mapped to the same position or crap
+will happen.
+
+=over
+
+=item Arguments:
+
+=over
+
+=item $maps_to_min_ref:
+
+Hash ref that specifies for each kept minimum (key) to which new minimum
+(value) it is supposed to be mapped.
+
+=item $new_min_count:
+
+New size (number of mins) of the record after the transformation. Defaults to
+the maximum value of C<$maps_to_min_ref>.
+
+=back
+
+=back
 
 =head2 $pop_data->stringify
 
