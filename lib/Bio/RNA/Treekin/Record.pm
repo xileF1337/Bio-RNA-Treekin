@@ -565,7 +565,7 @@ Return the number of minima.
 
 =head2 $record->mins
 
-Return the list of all contained minima, i. e. C<1...
+Return the list of all contained minima, i. e. C<< 1...$record->min_count >>
 
 =head2 $record->keep_mins(@kept_minima)
 
