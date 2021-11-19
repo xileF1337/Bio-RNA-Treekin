@@ -75,6 +75,15 @@ sub min_count {
     return $min_count;
 }
 
+# Return a list of all minima, i. e. 1..n, where n is the total number of
+# minima.
+sub mins {
+    my ($self) = @_;
+    my @mins = 1..$self->min_count;
+
+    return @mins;
+}
+
 # Keep only the population data for the selected minima, remove all other.
 # Will NOT rescale populations, so they may no longer sum up to 1.
 # Arguments:
@@ -168,15 +177,26 @@ sub add_min {
     return $new_min_count;              # count == highest index
 }
 
-# Given a key--value list of minima (key) and population data list refs
-# (value), append the data points to the respective minimum, filling other
-# columns with zeroes.
+# Given a list of population data records, append them to the population data
+# of this record. The columns of the added data can be re-arranged on the fly by
+# providing a mapping (hash ref) giving for each minimum in the population
+# data to be added (key) a minimum in the current population data
+# (value) to which the new minimum should be swapped. If no data is provided
+# for some minimum of this record, its population is set to zero in the
+# newly added entries.
+# Arguments:
+#   pop_data_ref:   ref to the array of population data to be added
+#   append_to_min_ref:
+#       hash ref describing which mininum in pop_data_ref (key)
+#       should be mapped to which minimum in this record (value)
 # The passed population data objects are modified.
 sub append_pop_data {
-    my ($self, $pop_data_ref, $merged_to_min_ref) = @_;
+    my ($self, $pop_data_ref, $append_to_min_ref) = @_;
 
-    my $min_count = $self->min_count;
-    $_->transform($merged_to_min_ref, $min_count) foreach @$pop_data_ref;
+    if (defined $append_to_min_ref) {
+        my $min_count = $self->min_count;
+        $_->transform($append_to_min_ref, $min_count) foreach @$pop_data_ref;
+    }
 
     push @{ $self->_population_data }, @$pop_data_ref;
 
@@ -534,62 +554,76 @@ objects and its population data.
 
 Construct a new record from a (single) I<Treekin> file.
 
-=head2 population_data_count
+=head2 $record->population_data_count
 
 Return the number of population data records, i. e. the number of simulated
 time steps, including the start time.
 
-=head2 min_count
+=head2 $record->min_count
 
 Return the number of minima.
 
-=head2 keep_mins(@kept_minima)
+=head2 $record->mins
+
+Return the list of all contained minima, i. e. C<1...
+
+=head2 $record->keep_mins(@kept_minima)
 
 Remove all minima but the ones from C<@kept_minima>. The list is sorted and
 de-duplicated first.
 
-=head2 splice_mins(@kept_minima)
+=head2 $record->splice_mins(@kept_minima)
 
 Like C<keep_mins()>, but do not sort / de-duplicate, but use C<@kept_minima>
 as is. This can be used to remove, duplicate or reorder minima.
 
-=head2 max_pop_of_min($minimum)
+=head2 $record->max_pop_of_min($minimum)
 
 Get the maximum population value of all time points for a specific C<$minimum>.
 
-=head2 pops_of_min($minimum)
+=head2 $record->pops_of_min($minimum)
 
 Get a list of the populations at all time points (in chronological order) for
 a single C<$minimum>.
 
-=head2 final_population
+=head2 $record->final_population
 
 Get the last population data record, an object of class
 L<Bio::RNA::Treekin::PopulationDataRecord>. It contains the population data
 for all minima at the C<stop_time>.
 
-=head2 population($i)
+=head2 $record->population($i)
 
 Get the C<$i>-th population data record, an object of class
 L<Bio::RNA::Treekin::PopulationDataRecord>. C<$i> is a zero-based index in
 chronological order.
 
-=head2 populations
+=head2 $record->populations
 
 Returns the list of all population data records. Useful for iterating.
 
-=head2 add_min
+=head2 $record->add_min
 
 Add a single new minimum with all-zero entries. Data can then be appended to
 this new min using C<append_pop_data()>.
 
 Returns the index of the new minimum.
 
-=head2 append_pop_data
+=head2 $record->append_pop_data($pop_data_ref, $append_to_min_ref)
 
-TODO
+Given a list of population data records C<$pop_data_ref>, append them to the
+population data of this record.
 
-=head2 stringify
+The columns of the added data can be
+re-arranged on the fly by providing a mapping C<$append_to_min_ref> (a hash
+ref) giving for each minimum in C<$pop_data_ref> (key) a
+minimum in the current population data (value) to which the new minimum should
+be swapped. If no data is provided for some minimum of this record, its
+population is set to zero in the newly added entries.
+
+=head2 $record->stringify
+
+=head2 "$record"
 
 Returns the record as a I<Treekin> file.
 
