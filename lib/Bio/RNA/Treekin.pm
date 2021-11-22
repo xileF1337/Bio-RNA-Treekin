@@ -6,8 +6,6 @@ use 5.006;
 use strict;
 use warnings;
 
-use IO::File::RecordStream;
-use Bio::RNA::Treekin::PopulationDataRecord;
 use Bio::RNA::Treekin::Record;
 use Bio::RNA::Treekin::MultiRecord;
 

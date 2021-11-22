@@ -18,7 +18,10 @@ use Scalar::Util qw(reftype openhandle);
 use List::Util qw(first pairmap max uniqnum all);
 use Carp qw(croak);
 
+use Bio::RNA::Treekin::PopulationDataRecord;
+
 use overload '""' => \&stringify;
+
 
 has '_population_data'  => (
     is       => 'ro',
