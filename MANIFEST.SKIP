@@ -9,7 +9,7 @@
 \bBuild.COM$
 \bBUILD.COM$
 \bbuild.com$
-^MANIFEST\.SKIP
+\bMANIFEST\.SKIP
 
 # Avoid archives of this distribution
 \bBio-RNA-Treekin-[\d\.\_]+
@@ -22,6 +22,6 @@
 [.]git
 
 # Misc
-^conda_env.yml$
+\bconda_env[.]yml$
 
 
