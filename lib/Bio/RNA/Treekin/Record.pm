@@ -317,7 +317,6 @@ sub _read_record_lines {
         next if $current_line =~ /^@/               # drop xmgrace annotations
                 or $current_line =~ m{ ^ \s* $ }x;  # or empty lines
 
-        print "current line: $current_line\n";
         # Header lines start with '# ', remove it.
         if ($current_line =~ s/^# //) {         # header line
             push @header_lines, $current_line;
