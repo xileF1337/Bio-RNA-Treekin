@@ -5,7 +5,7 @@
 package Bio::RNA::Treekin::Record;
 our $VERSION = '0.03';
 
-use 5.006;
+use v5.14;                          # required for non-destructive subst m///r
 use strict;
 use warnings;
 
