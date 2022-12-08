@@ -3,7 +3,7 @@
 # Stores a data from a single row of the Treekin file, i.e. the populations of
 # all minima at a given time point.
 package Bio::RNA::Treekin::Record;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use v5.14;                          # required for non-destructive subst m///r
 use strict;
