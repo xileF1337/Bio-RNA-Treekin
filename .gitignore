@@ -20,3 +20,5 @@ _Inline             # code compiled by Inline::C module
 .*.swp
 *.swp
 *.bak               # backup files
+MANIFEST.bak
+MANIFEST.SKIP.bak
